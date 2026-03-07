@@ -246,7 +246,8 @@ def get_top_docs_per_cluster(
     for c_idx in range(U.shape[0]):
         memberships = U[c_idx]
         top_indices = np.argsort(memberships)[::-1][:top_n]
-        result[c_idx] = [
+        # JSON requires string keys — convert int cluster index to str
+        result[str(c_idx)] = [
             {
                 "doc_id": doc_ids[i],
                 "category": categories[i],
@@ -275,7 +276,8 @@ def get_boundary_documents(
             "doc_id": doc_ids[i],
             "category": categories[i],
             "entropy": float(entropy[i]),
-            "memberships": {c: float(U[c, i]) for c in np.argsort(U[:, i])[::-1][:5]},
+            # Use str(c) keys — np.argsort returns numpy int64 which JSON can't serialise
+            "memberships": {str(c): float(U[c, i]) for c in np.argsort(U[:, i])[::-1][:5]},
         }
         for i in top_indices
     ]
@@ -298,6 +300,17 @@ def save_results(
     """Save cluster assignments and analysis metadata."""
     CLUSTERS_DIR.mkdir(parents=True, exist_ok=True)
 
+    # Custom JSON encoder to handle any residual numpy types
+    class NumpySafeEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, (np.integer,)):
+                return int(obj)
+            if isinstance(obj, (np.floating,)):
+                return float(obj)
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()
+            return super().default(obj)
+
     # 1. Membership matrix + doc_ids as NPZ (compact, fast to load)
     np.savez_compressed(
         str(CLUSTERS_DIR / "assignments.npz"),
@@ -318,7 +331,7 @@ def save_results(
         "boundary_documents": boundary_docs,
     }
     with open(CLUSTERS_DIR / "metadata.json", "w") as f:
-        json.dump(metadata, f, indent=2)
+        json.dump(metadata, f, indent=2, cls=NumpySafeEncoder)
     log.info("Saved metadata.json")
 
 
