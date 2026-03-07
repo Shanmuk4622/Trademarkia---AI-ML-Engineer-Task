@@ -18,11 +18,12 @@ Python's GIL + the cache's internal threading.Lock protect concurrent writes.
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 import numpy as np
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from src.data_pipeline import get_collection, get_embedding_model, CHROMA_DIR
@@ -34,6 +35,8 @@ log = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).parent.parent
 CLUSTERS_DIR = PROJECT_ROOT / "clusters"
+STATIC_DIR = PROJECT_ROOT / "src" / "static"
+STATIC_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ---------------------------------------------------------------------------
@@ -109,6 +112,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
 
 # ---------------------------------------------------------------------------
 # Request / Response models
@@ -129,12 +134,19 @@ class QueryRequest(BaseModel):
     n_results: int = Field(5, ge=1, le=20, description="Number of search results to return on a miss")
 
 
+class SearchResult(BaseModel):
+    id: int
+    category: str
+    similarity: float
+    text: str
+
+
 class QueryResponse(BaseModel):
     query: str
     cache_hit: bool
     matched_query: Optional[str]
     similarity_score: Optional[float]
-    result: str
+    result: List[SearchResult]
     dominant_cluster: int
 
 
@@ -164,7 +176,7 @@ def search_corpus(
     cluster_U: np.ndarray,
     categories,
     n_results: int = 5,
-) -> str:
+) -> List[dict]:
     """
     Query ChromaDB for the most semantically similar documents.
 
@@ -172,7 +184,7 @@ def search_corpus(
     index internally). The cluster information is returned in the response for
     transparency, but the raw vector search already gives the best results.
 
-    Returns a formatted result string with the top matching documents.
+    Returns a formatted list of dictionaries containing the best matching documents.
     """
     results = collection.query(
         query_embeddings=[query_vec.tolist()],
@@ -184,21 +196,30 @@ def search_corpus(
     metas = results["metadatas"][0]
     distances = results["distances"][0]  # cosine distance = 1 - cosine_similarity
 
-    lines = []
+    results_list = []
     for i, (doc, meta, dist) in enumerate(zip(docs, metas, distances)):
         similarity = round(1.0 - dist, 4)
-        preview = doc[:300].replace("\n", " ").strip()
-        lines.append(
-            f"[{i+1}] Category: {meta['category']} | Similarity: {similarity}\n"
-            f"    {preview}..."
-        )
+        results_list.append({
+            "id": i + 1,
+            "category": meta["category"],
+            "similarity": similarity,
+            "text": doc.strip()
+        })
 
-    return "\n\n".join(lines) if lines else "No results found."
+    return results_list
 
 
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+async def serve_ui():
+    """Serves the interactive frontend UI."""
+    index_file = STATIC_DIR / "index.html"
+    if index_file.exists():
+        return index_file.read_text(encoding="utf-8")
+    return "<h1>UI not found</h1><p>Please ensure src/static/index.html exists.</p>"
 
 @app.post("/query", response_model=QueryResponse)
 async def query_endpoint(body: QueryRequest, request: Request):

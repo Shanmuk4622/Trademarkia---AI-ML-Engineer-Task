@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>20 Newsgroups Semantic Search</title>
+    <!-- TailwindCSS for styling per web app dynamic aesthetics requirement -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        /* Glassmorphism utility classes */
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .result-card { transition: all 0.3s ease; }
+        .result-card:hover { transform: translateY(-2px); border-color: rgba(99, 102, 241, 0.5); box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.1); }
+        .glow { box-shadow: 0 0 20px rgba(99, 102, 241, 0.2); }
+        .glow:focus-within { box-shadow: 0 0 30px rgba(99, 102, 241, 0.4); border-color: rgba(99, 102, 241, 0.6); }
+        /* Multiline text truncation using webkit extension */
+        .text-truncate { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+    </style>
+</head>
+<body class="min-h-screen relative overflow-x-hidden">
+    <!-- Beautiful modern background glows -->
+    <div class="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-600/30 blur-[140px] pointer-events-none"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-fuchsia-600/20 blur-[140px] pointer-events-none"></div>
+
+    <div class="max-w-4xl mx-auto pt-20 px-6 pb-24 relative z-10">
+        <!-- Interactive Header Area -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl sm:text-5xl font-bold mb-4 tracking-tight bg-gradient-to-r from-indigo-400 via-purple-400 to-fuchsia-400 bg-clip-text text-transparent transform transition hover:scale-105 inline-block cursor-default">
+                Semantic Cache Search
+            </h1>
+            <p class="text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">
+                Explore the 20 Newsgroups corpus. Powered by a custom cluster-aware caching engine returning structured intelligence instead of raw strings.
+            </p>
+        </div>
+
+        <!-- Dynamic Search Input -->
+        <div class="glass-panel p-2 pl-6 rounded-full flex items-center mb-6 glow transition duration-300">
+            <svg class="w-6 h-6 text-indigo-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <input type="text" id="searchInput" class="flex-1 bg-transparent border-none outline-none text-lg text-white placeholder-slate-500 py-3" placeholder="Ask a question or search topics (e.g., 'What does apple mean?')" onkeydown="if(event.key === 'Enter') performSearch()">
+            <button onclick="performSearch()" id="searchBtn" class="bg-indigo-600 hover:bg-indigo-500 transition px-8 py-3 rounded-full font-semibold flex items-center gap-2 group">
+                <span>Search</span>
+                <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </button>
+        </div>
+
+        <!-- Telemetry & Status Bar -->
+        <div class="flex justify-between items-center text-sm mb-10 px-4">
+            <div id="statusText" class="flex items-center gap-2 text-slate-400">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> App Ready
+            </div>
+            <div class="flex gap-4 font-mono">
+                <span id="cacheHitStat" class="hidden px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">⚡ Cache Hit</span>
+                <span id="timeStat" class="text-indigo-300"></span>
+            </div>
+        </div>
+
+        <!-- Formatted Structure Results Area -->
+        <div id="resultsContainer" class="space-y-6 hidden">
+            <!-- JS inserts beautiful cards here -->
+        </div>
+
+        <!-- Raw JSON Explorer -->
+        <div class="mt-14 text-center hidden" id="rawJsonToggleWrapper">
+            <div class="h-px w-full bg-gradient-to-r from-transparent via-slate-700 to-transparent mb-8"></div>
+            <button onclick="document.getElementById('rawJson').classList.toggle('hidden')" class="text-xs text-slate-400 hover:text-indigo-400 transition font-medium uppercase tracking-wider">
+                <span class="border-b border-slate-600 hover:border-indigo-400 pb-1">Toggle Raw JSON Inspector</span>
+            </button>
+            <pre id="rawJson" class="hidden text-left mt-6 text-xs font-mono bg-slate-900/90 p-6 rounded-xl border border-slate-800 overflow-x-auto text-emerald-400 shadow-2xl backdrop-blur-md"></pre>
+        </div>
+    </div>
+
+    <script>
+        async function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if(!query) return;
+
+            const btn = document.getElementById('searchBtn');
+            const container = document.getElementById('resultsContainer');
+            const status = document.getElementById('statusText');
+            const timeStat = document.getElementById('timeStat');
+            const cacheStat = document.getElementById('cacheHitStat');
+            const rawJson = document.getElementById('rawJson');
+            const jsonToggle = document.getElementById('rawJsonToggleWrapper');
+
+            // Set loading state UI
+            btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Searching`;
+            btn.classList.add('opacity-80', 'cursor-not-allowed');
+            status.innerHTML = `<span class="animate-pulse text-indigo-400">Embedding and scanning vector space...</span>`;
+            timeStat.innerText = "";
+            cacheStat.classList.add('hidden');
+            container.innerHTML = "";
+            container.classList.remove('hidden');
+            jsonToggle.classList.add('hidden');
+
+            const start = performance.now();
+
+            try {
+                // Call our FastAPI
+                const res = await fetch('/query', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({query: query, n_results: 5})
+                });
+
+                if(!res.ok) throw new Error(res.statusText);
+                const data = await res.json();
+                const latency = parseInt(performance.now() - start);
+
+                // Update JSON dump section
+                rawJson.textContent = JSON.stringify(data, null, 2);
+                jsonToggle.classList.remove('hidden');
+
+                // Telemetry Updates
+                timeStat.innerText = `${latency}ms`;
+                if(data.cache_hit) {
+                    cacheStat.classList.remove('hidden');
+                    status.innerHTML = `Loaded directly from <span class="text-indigo-400 font-semibold">Cluster ${data.dominant_cluster}</span> memory bank (sim: ${data.similarity_score})`;
+                } else {
+                    status.innerHTML = `New query executed and bucketed to <span class="text-fuchsia-400 font-semibold">Cluster ${data.dominant_cluster}</span>`;
+                }
+
+                // Render Beautiful Cards
+                if(data.result && data.result.length > 0) {
+                    container.innerHTML = data.result.map((r, i) => `
+                        <div class="result-card glass-panel rounded-2xl p-6 relative overflow-hidden">
+                            <!-- Visual number id badge -->
+                            <div class="absolute -right-4 -top-4 w-16 h-16 bg-slate-800/40 rounded-full flex items-center justify-center font-bold text-3xl text-slate-700/50 -z-10">${i+1}</div>
+                            
+                            <div class="flex justify-between items-center mb-4 border-b border-slate-700/50 pb-3">
+                                <span class="px-3 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 rounded-lg text-xs font-semibold tracking-wider uppercase">
+                                    ${r.category}
+                                </span>
+                                <div class="flex items-center gap-1.5 text-xs font-mono text-slate-300 bg-slate-800/80 px-2 py-1.5 rounded-md shadow-inner border border-slate-700/50">
+                                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                                    ${(r.similarity * 100).toFixed(1)}% Match
+                                </div>
+                            </div>
+                            <p class="text-slate-300 leading-relaxed text-sm text-truncate italic">"${r.text}"</p>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = `<div class="text-center py-16 text-slate-400 bg-slate-800/30 rounded-2xl border border-slate-700/50 italic">No semantic matches found.</div>`;
+                }
+
+            } catch (err) {
+                status.innerText = `Network Error: ${err.message}`;
+                status.classList.replace('text-slate-400', 'text-red-400');
+            } finally {
+                // Restore Button State
+                btn.innerHTML = `<span>Search</span><svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
+                btn.classList.remove('opacity-80', 'cursor-not-allowed');
+            }
+        }
+    </script>
+</body>
+</html>

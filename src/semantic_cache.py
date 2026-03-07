@@ -83,7 +83,7 @@ DEFAULT_THRESHOLD = 0.80  # see decision note #4 above
 class CacheEntry:
     query: str
     vector: List[float]           # normalised embedding
-    result: str                   # the computed answer/result string
+    result: List[Dict[str, Any]]  # structured search results
     dominant_cluster: int         # argmax of fuzzy membership
     membership_vector: List[float] # full fuzzy membership distribution
 
@@ -198,7 +198,7 @@ class SemanticCache:
             return best_entry, best_score
         return None
 
-    def insert(self, query: str, vector: np.ndarray, result: str) -> CacheEntry:
+    def insert(self, query: str, vector: np.ndarray, result: List[Dict[str, Any]]) -> CacheEntry:
         """
         Store a new query+result in the cache.
 
