@@ -29,6 +29,11 @@ docker-compose up
 **Result:** The entire search engine, complete with the interactive UI and API, is now live at **[http://localhost:8000](http://localhost:8000)**. 
 *(It runs exactly as if you were running it manually, but completely isolated and ready for production).*
 
+**4. How to Explore the System**
+1. Open **[http://localhost:8000](http://localhost:8000)** to use the beautiful interactive Semantic Search UI.
+2. Open **[http://localhost:8000/docs](http://localhost:8000/docs)** to test the raw API endpoints via Swagger.
+3. Open `notebooks/heuristic_analysis.ipynb` in GitHub to read the proof of our Tuning decisions.
+
 ---
 
 ## 🧪 Sample Queries to Test the Semantic Cache
