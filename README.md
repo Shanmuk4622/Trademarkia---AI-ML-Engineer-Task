@@ -2,7 +2,12 @@
 
 **Trademarkia AI/ML Engineer Task** | Built by Shanmuk
 
-A production-ready semantic search engine on the 20 Newsgroups dataset (~20k articles). Includes two-phase fuzzy clustering, a custom cluster-aware semantic cache, and a rich interactive web UI.
+A production-ready semantic search engine on the 20 Newsgroups dataset (~20k articles). Includes two-phase fuzzy clustering, a custom cluster-aware semantic cache, and a pristine, minimalist search UI.
+
+---
+
+## ✨ New Premium UI
+The frontend has been completely redesigned with a pristine, Vercel-inspired minimal light mode to ensure the highest quality presentation of search results.
 
 ---
 
@@ -43,7 +48,7 @@ docker-compose up --build
 > This pins torchvision to the exact version compatible with `torch==2.2.2`.
 
 **Once running, explore:**
-1. **[http://localhost:8000](http://localhost:8000)** — Interactive Search UI
+1. **[http://localhost:8000](http://localhost:8000)** — Minimalist Web UI
 2. **[http://localhost:8000/docs](http://localhost:8000/docs)** — Swagger API Explorer
 3. **[http://localhost:8000/cache/stats](http://localhost:8000/cache/stats)** — Live cache telemetry
 
