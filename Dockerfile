@@ -20,6 +20,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Pre-download the sentence-transformer model into the image during build.
+# This means `docker-compose up` starts in ~5 seconds — the model is never
+# downloaded at runtime. Without this, the first startup downloads ~90MB.
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+
 # ---- Copy project source ----
 COPY src/ ./src/
 COPY scripts/ ./scripts/

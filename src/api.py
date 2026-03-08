@@ -91,6 +91,7 @@ async def lifespan(app: FastAPI):
     log.info(f"Cache ready — {len(app.state.cache._entries)} existing entries")
 
     log.info("=== Startup complete. Ready to serve requests. ===")
+    log.info(">>> Open your browser at: http://localhost:8000 <<<")
     yield
 
     # Shutdown
