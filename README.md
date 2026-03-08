@@ -18,7 +18,21 @@ docker-compose up --build
 
 Then open **[http://localhost:8000](http://localhost:8000)** in your browser.
 
-> **First-run note:** On first run, the container automatically builds the vector database and fuzzy clusters from the raw corpus (~15 min on CPU, ~2-3 min with GPU). All subsequent `docker-compose up` calls are **instant** because the data is persisted via volume mounts.
+> **First-run note:** On first run the container builds the vector DB and clusters automatically (~15 min on CPU). All subsequent `docker-compose up` calls are **instant** because data is persisted via volume mounts.
+
+**⚡ Have a GPU? Start the server in 5 seconds instead:**
+
+Docker containers on Windows cannot access your NVIDIA GPU directly. Run the pipeline natively first (where your GPU is fully available), then Docker just serves the pre-built data instantly:
+
+```bash
+# Step 1 — run pipeline natively (uses your GPU, ~2 min)
+conda activate cv_conda
+pip install -r requirements.txt
+python scripts/run_pipeline.py
+
+# Step 2 — start Docker (finds pre-built data, skips pipeline, ready in ~5 sec)
+docker-compose up --build
+```
 
 **How to explore once it's running:**
 1. **[http://localhost:8000](http://localhost:8000)** — Interactive Semantic Search UI
