@@ -6,33 +6,24 @@ A production-ready semantic search engine built from scratch on the 20 Newsgroup
 
 ---
 
-## ⚡ Quick Start: Running via Docker (Recommended for other computers)
+## ⚡ Quick Start: One-Command Docker Setup
 
-To test this on any other computer instantly, you just need Docker. You don't need Python or Conda installed.
+Everything runs in a single command. You only need **Docker Desktop** installed.
 
-**1. Clone the repository and navigate into it**
 ```bash
 git clone https://github.com/Shanmuk4622/Trademarkia---AI-ML-Engineer-Task.git
-cd "Trademarkia---AI-ML-Engineer-Task"
+cd Trademarkia---AI-ML-Engineer-Task
+docker-compose up --build
 ```
 
-**2. Build the Docker Image**
-```bash
-docker build -t trademarkia-search .
-```
+Then open **[http://localhost:8000](http://localhost:8000)** in your browser.
 
-**3. Run the Container**
-```bash
-docker-compose up
-```
+> **First-run note:** On first run, the container automatically builds the vector database and fuzzy clusters from the raw corpus (~15 min on CPU, ~2-3 min with GPU). All subsequent `docker-compose up` calls are **instant** because the data is persisted via volume mounts.
 
-**Result:** The entire search engine, complete with the interactive UI and API, is now live at **[http://localhost:8000](http://localhost:8000)**. 
-*(It runs exactly as if you were running it manually, but completely isolated and ready for production).*
-
-**4. How to Explore the System**
-1. Open **[http://localhost:8000](http://localhost:8000)** to use the beautiful interactive Semantic Search UI.
-2. Open **[http://localhost:8000/docs](http://localhost:8000/docs)** to test the raw API endpoints via Swagger.
-3. Open `notebooks/heuristic_analysis.ipynb` in GitHub to read the proof of our Tuning decisions.
+**How to explore once it's running:**
+1. **[http://localhost:8000](http://localhost:8000)** — Interactive Semantic Search UI
+2. **[http://localhost:8000/docs](http://localhost:8000/docs)** — Swagger API Explorer
+3. **[http://localhost:8000/cache/stats](http://localhost:8000/cache/stats)** — Live cache telemetry
 
 ---
 
