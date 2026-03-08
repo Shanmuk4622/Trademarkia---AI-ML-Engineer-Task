@@ -1,6 +1,7 @@
 # Core ML / Embeddings
 sentence-transformers==2.7.0
 torch==2.2.2
+torchvision==0.17.2   # must match torch 2.2.2 exactly — newer versions break import
 numpy==1.26.4
 scipy==1.13.0
 
