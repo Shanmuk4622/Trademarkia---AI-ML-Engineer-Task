@@ -6,6 +6,20 @@ A production-ready semantic search engine on the 20 Newsgroups dataset (~20k art
 
 ---
 
+## 🎥 Project Demo
+
+Watch the full system walkthrough and explanation here:  
+👉 **[YouTube: 20 Newsgroups Semantic Search Engine Demo](https://youtu.be/fFj4ugAQudc)**
+
+### UI Previews
+Below are screenshots of the custom-built, modern Semantic Intranet web interface:
+
+![Screenshot 1](pics/image.png)
+![Screenshot 2](pics/image%20copy.png)
+![Screenshot 3](pics/image%20copy%202.png)
+
+---
+
 ## ✨ New Premium UI
 The frontend has been completely redesigned with a pristine, Vercel-inspired minimal light mode to ensure the highest quality presentation of search results.
 
