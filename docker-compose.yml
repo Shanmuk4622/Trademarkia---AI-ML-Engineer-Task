@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   semantic-search:
     build:
@@ -10,16 +8,29 @@ services:
       - "8000:8000"
     volumes:
       # Mount the data directories so the container uses pre-built indices
-      # without baking them into the image (they can be large)
+      # and so cache writes from the container are persisted on the host.
       - ./embeddings:/app/embeddings
       - ./clusters:/app/clusters
       - ./cache:/app/cache
+      # Mount dataset so the pipeline can run inside the container too
+      - ./twenty+newsgroups:/app/twenty+newsgroups:ro
     environment:
       - PYTHONUNBUFFERED=1
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        set -e
+        if [ ! -f /app/clusters/assignments.npz ]; then
+          echo "=== No cluster data found. Running pipeline first... ==="
+          python scripts/run_pipeline.py
+        else
+          echo "=== Pre-built data found. Skipping pipeline. ==="
+        fi
+        exec uvicorn src.api:app --host 0.0.0.0 --port 8000 --workers 1
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 20s
+      start_period: 120s
