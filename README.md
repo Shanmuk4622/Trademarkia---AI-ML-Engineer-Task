@@ -1,15 +1,18 @@
-# 20 Newsgroups — Semantic Search Engine
+# 20 Newsgroups — Semantic Search Engine  
+**Trademarkia AI/ML Engineer Task** | Built by Shanmuk  
 
-**Trademarkia AI/ML Engineer Task** | Built by Shanmuk
-
-A production-ready semantic search engine on the 20 Newsgroups dataset (~20k articles). Includes two-phase fuzzy clustering, a custom cluster-aware semantic cache, and a pristine, minimalist search UI.
+A production-ready semantic search engine on the 20 Newsgroups dataset (~20k articles). Includes two-phase fuzzy clustering, a custom cluster-aware semantic cache, and a pristine, minimalist search UI.  
 
 ---
 
-## 🎥 Project Demo
+## 🎥 Video Review  
+Check out the full walkthrough and system explanation here:  
 
-Watch the full system walkthrough and explanation here:  
-👉 **[YouTube: 20 Newsgroups Semantic Search Engine Demo](https://youtu.be/fFj4ugAQudc)**
+[![20 Newsgroups Semantic Search Engine Demo](https://img.youtube.com/vi/fFj4ugAQudc/0.jpg)](https://youtu.be/fFj4ugAQudc)
+
+This review highlights the search engine’s architecture, clustering strategy, and live demo of the semantic cache in action.  
+
+---
 
 ### UI Previews
 Below are screenshots of the custom-built, modern Semantic Intranet web interface:
